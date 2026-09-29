@@ -81,8 +81,8 @@
   border-radius: 50%;
   margin-right: 6px;
 
-  &.ok { background: #2e7d32; }
-  &.ko { background: #c62828; }
+  &.ok { background: var(--app-exito); }
+  &.ko { background: var(--app-error); }
 }
 
 .rank-row {
@@ -133,7 +133,7 @@
   border-radius: 999px;
   background: var(--mat-sys-primary);
 
-  &.low { background: #c62828; }
+  &.low { background: var(--app-error); }
 }
 
 .bar-value { text-align: right; font-weight: 500; }

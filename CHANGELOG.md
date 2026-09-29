@@ -2,6 +2,10 @@
 
 Registro técnico de hitos. Formato: fecha — resumen, con referencia a ADRs y specs.
 
+## Sin publicar (rama develop)
+
+- Modo oscuro: botón en la barra superior; la primera visita sigue la preferencia del sistema y después se recuerda la elección (`ThemeService`, `localStorage`). Angular Material 3 con `theme-type: color-scheme` genera cada color con `light-dark()`, así que cambiar de tema es cambiar `color-scheme` en `<html>`. Los colores propios (aprobada/reprobada) pasan a variables CSS con `light-dark()`; las alertas de SweetAlert2 usan su tema `dark`. Un script en `index.html` aplica el tema guardado antes de que cargue Angular para evitar el destello claro.
+
 ## 2026-09-29 — Evaluación única por estudiante y profesor
 
 - Corregido: se podía registrar dos veces la misma evaluación («Parcial 1») al mismo estudiante con el mismo profesor. Ahora estudiante + profesor + evaluación es única: validación en `NotaService` al crear y al editar (400 en `nombre`) e índice único `IX_Nota_IdEstudiante_IdProfesor_Nombre` (migración `NotaUnica`, también en `01_crear_base_datos.sql`). La migración renombra antes las repetidas existentes («Parcial 1 (2)») en lugar de borrarlas.

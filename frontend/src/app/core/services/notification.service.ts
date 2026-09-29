@@ -1,5 +1,6 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import Swal from 'sweetalert2';
+import { ThemeService } from './theme.service';
 
 /**
  * Punto único para las alertas de la aplicación (SweetAlert2).
@@ -12,6 +13,8 @@ import Swal from 'sweetalert2';
  */
 @Injectable({ providedIn: 'root' })
 export class NotificationService {
+  private readonly theme = inject(ThemeService);
+
   private readonly toast = Swal.mixin({
     topLayer: true,
     toast: true,
@@ -27,7 +30,7 @@ export class NotificationService {
 
   /** Alerta de éxito tras crear, actualizar o eliminar. */
   success(message: string): void {
-    void this.toast.fire({ icon: 'success', title: message });
+    void this.toast.fire({ icon: 'success', title: message, theme: this.theme.tema() });
   }
 
   error(title: string, message?: string, details: string[] = []): void {
@@ -36,6 +39,7 @@ export class NotificationService {
       : '';
     void Swal.fire({
       topLayer: true,
+      theme: this.theme.tema(),
       icon: 'error',
       title,
       html: `${message ? escapeHtml(message) : ''}${list}`,
@@ -48,6 +52,7 @@ export class NotificationService {
   async confirmDelete(entity: string, name: string): Promise<boolean> {
     const result = await Swal.fire({
       topLayer: true,
+      theme: this.theme.tema(),
       icon: 'warning',
       title: `¿Eliminar ${entity}?`,
       html: `Se eliminará <strong>${escapeHtml(name)}</strong>. Esta acción no se puede deshacer.`,

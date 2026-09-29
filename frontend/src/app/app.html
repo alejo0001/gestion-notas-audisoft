@@ -40,6 +40,14 @@
       }
       <span class="topbar-title">AudiSoft · Gestión de Notas</span>
       <span class="spacer"></span>
+      <button
+        mat-icon-button
+        type="button"
+        (click)="theme.alternar()"
+        [matTooltip]="theme.esOscuro() ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+        [attr.aria-label]="theme.esOscuro() ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'">
+        <mat-icon>{{ theme.esOscuro() ? 'light_mode' : 'dark_mode' }}</mat-icon>
+      </button>
       <a
         mat-icon-button
         [href]="apiDocsUrl"
