@@ -4,10 +4,16 @@ import Swal from 'sweetalert2';
 /**
  * Punto único para las alertas de la aplicación (SweetAlert2).
  * Los componentes no llaman a Swal directamente: si mañana se cambia la librería, solo cambia este archivo.
+ *
+ * topLayer — desde Angular CDK 21 los diálogos de Material se muestran en la "top layer" del
+ * navegador (API nativa popover), que está por encima de cualquier z-index. Sin esta opción, una
+ * alerta lanzada con un diálogo abierto queda DETRÁS de él. Con topLayer, SweetAlert también usa la
+ * top layer y, al abrirse después, queda encima.
  */
 @Injectable({ providedIn: 'root' })
 export class NotificationService {
   private readonly toast = Swal.mixin({
+    topLayer: true,
     toast: true,
     position: 'top-end',
     showConfirmButton: false,
@@ -29,6 +35,7 @@ export class NotificationService {
       ? `<ul style="text-align:left;margin:12px 0 0">${details.map((d) => `<li>${escapeHtml(d)}</li>`).join('')}</ul>`
       : '';
     void Swal.fire({
+      topLayer: true,
       icon: 'error',
       title,
       html: `${message ? escapeHtml(message) : ''}${list}`,
@@ -40,6 +47,7 @@ export class NotificationService {
   /** Confirmación antes de una acción destructiva. Devuelve true si el usuario confirma. */
   async confirmDelete(entity: string, name: string): Promise<boolean> {
     const result = await Swal.fire({
+      topLayer: true,
       icon: 'warning',
       title: `¿Eliminar ${entity}?`,
       html: `Se eliminará <strong>${escapeHtml(name)}</strong>. Esta acción no se puede deshacer.`,
