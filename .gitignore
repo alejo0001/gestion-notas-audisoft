@@ -23,3 +23,5 @@ Thumbs.db
 # ---------- Material personal (no forma parte del entregable) ----------
 career-notes/
 *.ogg
+# Enunciado de la prueba (documento de AudiSoft, no se publica en el repositorio)
+PruebaTecnica*.pdf
