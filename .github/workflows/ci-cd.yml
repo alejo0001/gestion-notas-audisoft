@@ -100,14 +100,23 @@ jobs:
             --output efbundle --force
 
       # Azure SQL solo acepta IPs autorizadas: se abre la IP del runner solo mientras migra.
+      # Los runners de GitHub corren en Azure, así que la regla AllowAzureServices suele bastar;
+      # por eso este paso no detiene el despliegue si falla (continue-on-error).
       - name: Abrir firewall de Azure SQL para este runner
+        continue-on-error: true
         run: |
-          RUNNER_IP=$(curl -s https://api.ipify.org)
+          RUNNER_IP=$(curl -s --max-time 10 https://api.ipify.org || true)
+          echo "IP pública del runner: ${RUNNER_IP:-desconocida}"
+          if [[ ! "$RUNNER_IP" =~ ^[0-9]{1,3}(\.[0-9]{1,3}){3}$ ]]; then
+            echo "::warning::No se obtuvo una IPv4 válida; se confía en la regla AllowAzureServices."
+            exit 0
+          fi
           az sql server firewall-rule create \
             --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
             --server "${{ vars.SQL_SERVER_NAME }}" \
             --name "github-runner-${{ github.run_id }}" \
-            --start-ip-address "$RUNNER_IP" --end-ip-address "$RUNNER_IP"
+            --start-ip-address "$RUNNER_IP" --end-ip-address "$RUNNER_IP" \
+            --output none
 
       - name: Aplicar migraciones pendientes
         working-directory: backend
