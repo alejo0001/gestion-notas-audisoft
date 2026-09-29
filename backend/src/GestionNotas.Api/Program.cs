@@ -41,7 +41,8 @@ builder.Services.AddCors(options =>
 
         policy.AllowAnyHeader()
             .AllowAnyMethod()
-            .WithExposedHeaders("Location");
+            // Location: URL del recurso creado. Content-Disposition: nombre del archivo al exportar a Excel.
+            .WithExposedHeaders("Location", "Content-Disposition");
     }));
 
 // Límite de peticiones por IP: activo en producción, apagado en Development (sección RateLimiting).

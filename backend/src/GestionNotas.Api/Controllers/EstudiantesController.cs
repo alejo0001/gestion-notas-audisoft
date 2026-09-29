@@ -1,5 +1,6 @@
 using GestionNotas.Application.Common;
 using GestionNotas.Application.Estudiantes;
+using GestionNotas.Api.Exportacion;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GestionNotas.Api.Controllers;
@@ -20,6 +21,24 @@ public sealed class EstudiantesController(IEstudianteService service) : ApiContr
     [ProducesResponseType<IReadOnlyList<LookupDto>>(StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyList<LookupDto>>> GetLookup(CancellationToken cancellationToken) =>
         Ok(await service.GetLookupAsync(cancellationToken));
+
+    private static readonly ColumnaExcel<EstudianteDto>[] ColumnasExcel =
+    [
+        new("ID", e => e.Id, 8),
+        new("Nombre", e => e.Nombre, 35),
+        new("Cantidad de notas", e => e.CantidadNotas, 18),
+        new("Promedio", e => e.Promedio, 12, "0.00"),
+    ];
+
+    /// <summary>Excel con los estudiantes que cumplen la búsqueda (mismo orden que la tabla).</summary>
+    [HttpGet("exportar")]
+    [Produces(LibroExcel.ContentType)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Exportar([FromQuery] PagedQuery query, CancellationToken cancellationToken)
+    {
+        var filas = await service.ListarAsync(query, cancellationToken);
+        return File(LibroExcel.Crear("Estudiantes", ColumnasExcel, filas), LibroExcel.ContentType, LibroExcel.NombreArchivo("estudiantes"));
+    }
 
     [HttpGet("{id:int}")]
     [ProducesResponseType<EstudianteDto>(StatusCodes.Status200OK)]

@@ -12,7 +12,19 @@ public sealed class EstudianteService(
     IValidator<EstudianteSaveRequest> validator,
     ILogger<EstudianteService> logger) : IEstudianteService
 {
-    public async Task<PagedResult<EstudianteDto>> GetPagedAsync(PagedQuery query, CancellationToken cancellationToken)
+    public Task<PagedResult<EstudianteDto>> GetPagedAsync(PagedQuery query, CancellationToken cancellationToken) =>
+        Consultar(query).ToPagedResultAsync(query, cancellationToken);
+
+    /// <summary>Todos los registros que cumplen los filtros (sin paginar), para exportar a Excel.</summary>
+    public async Task<IReadOnlyList<EstudianteDto>> ListarAsync(PagedQuery query, CancellationToken cancellationToken) =>
+        await Consultar(query).Take(PagedQuery.MaxFilasExportacion).ToListAsync(cancellationToken);
+
+    /// <summary>
+    /// Filtros, búsqueda y orden compartidos por el listado paginado y la exportación: así el Excel contiene
+    /// exactamente lo que el usuario ve en la tabla. Devuelve un IQueryable: nada se ejecuta hasta que el
+    /// llamador pagina (Skip/Take) o materializa (ToListAsync), y todo se traduce a un único SQL.
+    /// </summary>
+    private IQueryable<EstudianteDto> Consultar(PagedQuery query)
     {
         var estudiantes = db.Estudiantes.AsNoTracking();
 
@@ -34,13 +46,12 @@ public sealed class EstudianteService(
             _ => estudiantes.OrderBy(e => e.Id)
         };
 
-        return await estudiantes
+        return estudiantes
             .Select(e => new EstudianteDto(
                 e.Id,
                 e.Nombre,
                 e.Notas.Count,
-                e.Notas.Average(n => (decimal?)n.Valor)))
-            .ToPagedResultAsync(query, cancellationToken);
+                e.Notas.Average(n => (decimal?)n.Valor)));
     }
 
     public async Task<Result<EstudianteDto>> GetByIdAsync(int id, CancellationToken cancellationToken)

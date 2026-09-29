@@ -12,7 +12,19 @@ public sealed class ProfesorService(
     IValidator<ProfesorSaveRequest> validator,
     ILogger<ProfesorService> logger) : IProfesorService
 {
-    public async Task<PagedResult<ProfesorDto>> GetPagedAsync(PagedQuery query, CancellationToken cancellationToken)
+    public Task<PagedResult<ProfesorDto>> GetPagedAsync(PagedQuery query, CancellationToken cancellationToken) =>
+        Consultar(query).ToPagedResultAsync(query, cancellationToken);
+
+    /// <summary>Todos los registros que cumplen los filtros (sin paginar), para exportar a Excel.</summary>
+    public async Task<IReadOnlyList<ProfesorDto>> ListarAsync(PagedQuery query, CancellationToken cancellationToken) =>
+        await Consultar(query).Take(PagedQuery.MaxFilasExportacion).ToListAsync(cancellationToken);
+
+    /// <summary>
+    /// Filtros, búsqueda y orden compartidos por el listado paginado y la exportación: así el Excel contiene
+    /// exactamente lo que el usuario ve en la tabla. Devuelve un IQueryable: nada se ejecuta hasta que el
+    /// llamador pagina (Skip/Take) o materializa (ToListAsync), y todo se traduce a un único SQL.
+    /// </summary>
+    private IQueryable<ProfesorDto> Consultar(PagedQuery query)
     {
         var profesores = db.Profesores.AsNoTracking();
 
@@ -31,9 +43,8 @@ public sealed class ProfesorService(
             _ => profesores.OrderBy(p => p.Id)
         };
 
-        return await profesores
-            .Select(p => new ProfesorDto(p.Id, p.Nombre, p.Notas.Count))
-            .ToPagedResultAsync(query, cancellationToken);
+        return profesores
+            .Select(p => new ProfesorDto(p.Id, p.Nombre, p.Notas.Count));
     }
 
     public async Task<Result<ProfesorDto>> GetByIdAsync(int id, CancellationToken cancellationToken)

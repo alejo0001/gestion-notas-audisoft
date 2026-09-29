@@ -1,5 +1,6 @@
 using GestionNotas.Application.Common;
 using GestionNotas.Application.Profesores;
+using GestionNotas.Api.Exportacion;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GestionNotas.Api.Controllers;
@@ -20,6 +21,23 @@ public sealed class ProfesoresController(IProfesorService service) : ApiControll
     [ProducesResponseType<IReadOnlyList<LookupDto>>(StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyList<LookupDto>>> GetLookup(CancellationToken cancellationToken) =>
         Ok(await service.GetLookupAsync(cancellationToken));
+
+    private static readonly ColumnaExcel<ProfesorDto>[] ColumnasExcel =
+    [
+        new("ID", p => p.Id, 8),
+        new("Nombre", p => p.Nombre, 35),
+        new("Cantidad de notas", p => p.CantidadNotas, 18),
+    ];
+
+    /// <summary>Excel con los profesores que cumplen la búsqueda (mismo orden que la tabla).</summary>
+    [HttpGet("exportar")]
+    [Produces(LibroExcel.ContentType)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Exportar([FromQuery] PagedQuery query, CancellationToken cancellationToken)
+    {
+        var filas = await service.ListarAsync(query, cancellationToken);
+        return File(LibroExcel.Crear("Profesores", ColumnasExcel, filas), LibroExcel.ContentType, LibroExcel.NombreArchivo("profesores"));
+    }
 
     [HttpGet("{id:int}")]
     [ProducesResponseType<ProfesorDto>(StatusCodes.Status200OK)]

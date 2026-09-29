@@ -51,6 +51,8 @@ public interface INotaService
 {
     Task<PagedResult<NotaDto>> GetPagedAsync(NotaQuery query, CancellationToken cancellationToken);
 
+    Task<IReadOnlyList<NotaDto>> ListarAsync(NotaQuery query, CancellationToken cancellationToken);
+
     Task<Result<NotaDto>> GetByIdAsync(int id, CancellationToken cancellationToken);
 
     Task<Result<NotaDto>> CreateAsync(NotaSaveRequest request, CancellationToken cancellationToken);

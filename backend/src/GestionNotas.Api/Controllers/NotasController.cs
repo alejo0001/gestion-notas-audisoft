@@ -1,5 +1,7 @@
 using GestionNotas.Application.Common;
 using GestionNotas.Application.Notas;
+using GestionNotas.Domain.Entities;
+using GestionNotas.Api.Exportacion;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GestionNotas.Api.Controllers;
@@ -14,6 +16,26 @@ public sealed class NotasController(INotaService service) : ApiControllerBase
         [FromQuery] NotaQuery query,
         CancellationToken cancellationToken) =>
         Ok(await service.GetPagedAsync(query, cancellationToken));
+
+    private static readonly ColumnaExcel<NotaDto>[] ColumnasExcel =
+    [
+        new("ID", n => n.Id, 8),
+        new("Evaluación", n => n.Nombre, 28),
+        new("Estudiante", n => n.EstudianteNombre, 28),
+        new("Profesor", n => n.ProfesorNombre, 28),
+        new("Valor", n => n.Valor, 10, "0.00"),
+        new("Resultado", n => n.Valor >= Nota.NotaMinimaAprobatoria ? "Aprobada" : "Reprobada", 14),
+    ];
+
+    /// <summary>Excel con las notas que cumplen la búsqueda y los filtros por estudiante y profesor (mismo orden que la tabla).</summary>
+    [HttpGet("exportar")]
+    [Produces(LibroExcel.ContentType)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Exportar([FromQuery] NotaQuery query, CancellationToken cancellationToken)
+    {
+        var filas = await service.ListarAsync(query, cancellationToken);
+        return File(LibroExcel.Crear("Notas", ColumnasExcel, filas), LibroExcel.ContentType, LibroExcel.NombreArchivo("notas"));
+    }
 
     [HttpGet("{id:int}")]
     [ProducesResponseType<NotaDto>(StatusCodes.Status200OK)]

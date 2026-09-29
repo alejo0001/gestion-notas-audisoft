@@ -23,6 +23,8 @@ public interface IProfesorService
 {
     Task<PagedResult<ProfesorDto>> GetPagedAsync(PagedQuery query, CancellationToken cancellationToken);
 
+    Task<IReadOnlyList<ProfesorDto>> ListarAsync(PagedQuery query, CancellationToken cancellationToken);
+
     Task<Result<ProfesorDto>> GetByIdAsync(int id, CancellationToken cancellationToken);
 
     Task<IReadOnlyList<LookupDto>> GetLookupAsync(CancellationToken cancellationToken);
