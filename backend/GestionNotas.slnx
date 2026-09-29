@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/GestionNotas.Domain/GestionNotas.Domain.csproj" />
+    <Project Path="src/GestionNotas.Application/GestionNotas.Application.csproj" />
+    <Project Path="src/GestionNotas.Infrastructure/GestionNotas.Infrastructure.csproj" />
+    <Project Path="src/GestionNotas.Api/GestionNotas.Api.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/GestionNotas.UnitTests/GestionNotas.UnitTests.csproj" />
+  </Folder>
+</Solution>

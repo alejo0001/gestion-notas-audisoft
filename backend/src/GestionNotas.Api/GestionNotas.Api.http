@@ -1,0 +1,53 @@
+### Colección de pruebas rápidas (Visual Studio / VS Code REST Client). Equivalente a Postman.
+@api = http://localhost:5080/api
+
+### Listar estudiantes (página 1, 5 por página, orden por nombre)
+GET {{api}}/estudiantes?page=1&pageSize=5&sortBy=nombre&sortDirection=asc
+
+### Buscar estudiantes
+GET {{api}}/estudiantes?search=ma
+
+### Crear estudiante
+POST {{api}}/estudiantes
+Content-Type: application/json
+
+{ "nombre": "Laura Sánchez" }
+
+### Crear estudiante inválido (400)
+POST {{api}}/estudiantes
+Content-Type: application/json
+
+{ "nombre": "" }
+
+### Actualizar estudiante
+PUT {{api}}/estudiantes/1
+Content-Type: application/json
+
+{ "nombre": "Sofía Ramírez Pérez" }
+
+### Eliminar estudiante con notas (409)
+DELETE {{api}}/estudiantes/1
+
+### Listar profesores
+GET {{api}}/profesores
+
+### Notas de un estudiante, ordenadas por valor
+GET {{api}}/notas?idEstudiante=1&sortBy=valor&sortDirection=desc
+
+### Crear nota
+POST {{api}}/notas
+Content-Type: application/json
+
+{ "nombre": "Parcial 3", "idEstudiante": 1, "idProfesor": 2, "valor": 4.25 }
+
+### Crear nota fuera de rango (400)
+POST {{api}}/notas
+Content-Type: application/json
+
+{ "nombre": "Parcial 3", "idEstudiante": 1, "idProfesor": 2, "valor": 5.5 }
+
+### Resumen para el dashboard
+GET {{api}}/reportes/resumen
+
+### Health check
+GET http://localhost:5080/health

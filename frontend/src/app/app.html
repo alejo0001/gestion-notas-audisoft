@@ -1,0 +1,57 @@
+<mat-sidenav-container class="shell">
+  <mat-sidenav
+    #drawer
+    class="sidenav"
+    [mode]="isHandset() ? 'over' : 'side'"
+    [opened]="!isHandset()"
+    [attr.role]="isHandset() ? 'dialog' : 'navigation'">
+    <div class="brand">
+      <mat-icon class="brand-icon">school</mat-icon>
+      <div>
+        <strong>Gestión de Notas</strong>
+        <span>Panel académico</span>
+      </div>
+    </div>
+
+    <mat-nav-list>
+      @for (item of menu; track item.route) {
+        <a
+          mat-list-item
+          [routerLink]="item.route"
+          routerLinkActive
+          #rla="routerLinkActive"
+          [activated]="rla.isActive"
+          (click)="isHandset() && drawer.close()">
+          <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+          <span matListItemTitle>{{ item.label }}</span>
+        </a>
+      }
+    </mat-nav-list>
+
+    <footer class="sidenav-footer">Prueba técnica .NET · {{ year }}</footer>
+  </mat-sidenav>
+
+  <mat-sidenav-content>
+    <mat-toolbar class="topbar">
+      @if (isHandset()) {
+        <button mat-icon-button type="button" aria-label="Abrir menú" (click)="drawer.toggle()">
+          <mat-icon>menu</mat-icon>
+        </button>
+      }
+      <span class="topbar-title">AudiSoft · Gestión de Notas</span>
+      <span class="spacer"></span>
+      <a
+        mat-icon-button
+        [href]="apiDocsUrl"
+        target="_blank"
+        rel="noopener"
+        matTooltip="Documentación del API">
+        <mat-icon>api</mat-icon>
+      </a>
+    </mat-toolbar>
+
+    <main>
+      <router-outlet />
+    </main>
+  </mat-sidenav-content>
+</mat-sidenav-container>

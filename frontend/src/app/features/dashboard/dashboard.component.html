@@ -1,0 +1,118 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <h1>Panel de inicio</h1>
+      <p>Resumen general del desempeño académico.</p>
+    </div>
+  </header>
+
+  @if (resumen(); as r) {
+    <div class="stats">
+      <a class="stat" routerLink="/estudiantes">
+        <mat-icon>school</mat-icon>
+        <div>
+          <span class="value">{{ r.totalEstudiantes }}</span>
+          <span class="label">Estudiantes</span>
+        </div>
+      </a>
+      <a class="stat" routerLink="/profesores">
+        <mat-icon>co_present</mat-icon>
+        <div>
+          <span class="value">{{ r.totalProfesores }}</span>
+          <span class="label">Profesores</span>
+        </div>
+      </a>
+      <a class="stat" routerLink="/notas">
+        <mat-icon>grading</mat-icon>
+        <div>
+          <span class="value">{{ r.totalNotas }}</span>
+          <span class="label">Notas registradas</span>
+        </div>
+      </a>
+      <div class="stat">
+        <mat-icon>insights</mat-icon>
+        <div>
+          <span class="value">
+            {{ r.promedioGeneral !== null ? (r.promedioGeneral | number: '1.2-2') : 'Sin datos' }}
+          </span>
+          <span class="label">Promedio general</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <mat-card appearance="outlined">
+        <mat-card-header>
+          <mat-card-title>Aprobación</mat-card-title>
+          <mat-card-subtitle>Notas iguales o superiores a {{ notaMinima | number: '1.1-1' }}</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          @let p = porcentajeAprobacion();
+          @if (p !== null) {
+            <div class="approval">
+              <span class="approval-value">{{ p | percent: '1.0-0' }}</span>
+              <mat-progress-bar mode="determinate" [value]="p * 100" />
+              <div class="approval-legend">
+                <span><span class="dot ok"></span>{{ r.notasAprobadas }} aprobadas</span>
+                <span><span class="dot ko"></span>{{ r.notasReprobadas }} reprobadas</span>
+              </div>
+            </div>
+          } @else {
+            <p class="sin-dato">Sin notas registradas.</p>
+          }
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card appearance="outlined">
+        <mat-card-header>
+          <mat-card-title>Mejores estudiantes</mat-card-title>
+          <mat-card-subtitle>Top 5 por promedio</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          @for (e of r.mejoresEstudiantes; track e.id; let i = $index) {
+            <div class="rank-row">
+              <span class="rank">{{ i + 1 }}</span>
+              <span class="rank-name">{{ e.nombre }}</span>
+              <span class="rank-meta">{{ e.cantidadNotas }} nota(s)</span>
+              <span class="badge" [class.aprobada]="e.promedio >= notaMinima" [class.reprobada]="e.promedio < notaMinima">
+                {{ e.promedio | number: '1.2-2' }}
+              </span>
+            </div>
+          } @empty {
+            <p class="sin-dato">Sin datos.</p>
+          }
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card appearance="outlined" class="span-2">
+        <mat-card-header>
+          <mat-card-title>Promedio por profesor</mat-card-title>
+          <mat-card-subtitle>Promedio de las notas que ha asignado cada profesor</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          @for (p of r.promedioPorProfesor; track p.id) {
+            <div class="bar-row">
+              <span class="bar-label">{{ p.nombre }}</span>
+              <div class="bar-track">
+                <div
+                  class="bar-fill"
+                  [class.low]="p.promedio < notaMinima"
+                  [style.width.%]="(p.promedio / 5) * 100"></div>
+              </div>
+              <span class="bar-value">{{ p.promedio | number: '1.2-2' }}</span>
+            </div>
+          } @empty {
+            <p class="sin-dato">Sin datos.</p>
+          }
+        </mat-card-content>
+      </mat-card>
+    </div>
+  } @else if (resumen() === null) {
+    <mat-card appearance="outlined" class="empty-state">
+      <mat-icon>cloud_off</mat-icon>
+      <p>No fue posible cargar el resumen. Verifique que el API esté en ejecución.</p>
+    </mat-card>
+  } @else {
+    <mat-progress-bar mode="indeterminate" />
+  }
+</section>
