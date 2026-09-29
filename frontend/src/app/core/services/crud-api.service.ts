@@ -1,4 +1,4 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
@@ -34,6 +34,18 @@ export abstract class CrudApiService<TDto, TSave, TQuery extends PagedQuery = Pa
 
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${id}`);
+  }
+
+  /**
+   * Descarga el Excel con los mismos filtros, búsqueda y orden de la tabla (sin paginar).
+   * observe: 'response' para leer también las cabeceras (nombre del archivo en Content-Disposition).
+   */
+  exportar(filtros: Omit<TQuery, 'page' | 'pageSize'>): Observable<HttpResponse<Blob>> {
+    return this.http.get(`${this.baseUrl}/exportar`, {
+      params: toHttpParams(filtros),
+      observe: 'response',
+      responseType: 'blob',
+    });
   }
 }
 

@@ -41,6 +41,7 @@ function showError(notifications: NotificationService, error: HttpErrorResponse)
   const titles: Record<number, string> = {
     404: 'Registro no encontrado',
     409: 'Operación no permitida',
+    429: 'Demasiadas peticiones',
   };
 
   notifications.error(

@@ -171,6 +171,55 @@
           ]
         },
         {
+          "name": "Exportar a Excel",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/estudiantes/exportar?search=a&sortBy=nombre",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "estudiantes",
+                "exportar"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "a"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "nombre"
+                }
+              ]
+            },
+            "description": "Descarga un .xlsx con los mismos filtros, búsqueda y orden del listado, sin paginar."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200 OK\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Devuelve un archivo de Excel\", () => {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"spreadsheetml.sheet\");",
+                  "    pm.expect(pm.response.headers.get(\"Content-Disposition\")).to.include(\"estudiantes-\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "Lookup (para listas desplegables)",
           "request": {
             "method": "GET",
@@ -734,6 +783,55 @@
                   "    // Comparación sin tildes ni mayúsculas, como la intercalación de SQL Server (CI).",
                   "    for (let i = 1; i < nombres.length; i++)",
                   "        pm.expect(nombres[i - 1].localeCompare(nombres[i], \"es\", { sensitivity: \"base\" })).to.be.at.least(0);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Exportar a Excel",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/profesores/exportar?search=a&sortBy=nombre",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "profesores",
+                "exportar"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "a"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "nombre"
+                }
+              ]
+            },
+            "description": "Descarga un .xlsx con los mismos filtros, búsqueda y orden del listado, sin paginar."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200 OK\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Devuelve un archivo de Excel\", () => {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"spreadsheetml.sheet\");",
+                  "    pm.expect(pm.response.headers.get(\"Content-Disposition\")).to.include(\"profesores-\");",
                   "});"
                 ]
               }
@@ -1403,6 +1501,51 @@
                   "    const items = pm.response.json().items;",
                   "    pm.expect(items.length).to.be.above(0);",
                   "    items.forEach(n => pm.expect(n.idEstudiante).to.eql(id));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Exportar a Excel",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/notas/exportar?idEstudiante={{estudianteId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "notas",
+                "exportar"
+              ],
+              "query": [
+                {
+                  "key": "idEstudiante",
+                  "value": "{{estudianteId}}"
+                }
+              ]
+            },
+            "description": "Descarga un .xlsx con los mismos filtros, búsqueda y orden del listado, sin paginar."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200 OK\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Devuelve un archivo de Excel\", () => {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"spreadsheetml.sheet\");",
+                  "    pm.expect(pm.response.headers.get(\"Content-Disposition\")).to.include(\"notas-\");",
                   "});"
                 ]
               }

@@ -4,10 +4,21 @@
       <h1>Notas</h1>
       <p>Calificaciones asignadas por los profesores a los estudiantes (escala de 0,0 a 5,0).</p>
     </div>
-    <button mat-flat-button type="button" (click)="crear()">
-      <mat-icon>add</mat-icon>
-      Nueva nota
-    </button>
+    <div class="header-actions">
+      <button
+        mat-stroked-button
+        type="button"
+        (click)="exportar()"
+        [disabled]="exportando() || totalCount() === 0"
+        matTooltip="Descargar en Excel los registros filtrados">
+        <mat-icon>download</mat-icon>
+        {{ exportando() ? 'Exportando…' : 'Exportar' }}
+      </button>
+      <button mat-flat-button type="button" (click)="crear()">
+        <mat-icon>add</mat-icon>
+        Nueva nota
+      </button>
+    </div>
   </header>
 
   <div class="toolbar-filters">
