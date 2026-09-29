@@ -53,7 +53,9 @@ var app = builder.Build();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 
-if (app.Environment.IsDevelopment())
+// Swagger siempre en desarrollo; en producción solo si se habilita explícitamente (Swagger__Enabled=true),
+// útil en la demo pública para que el evaluador pueda explorar el API.
+if (app.Environment.IsDevelopment() || app.Configuration.GetValue<bool>("Swagger:Enabled"))
 {
     app.MapOpenApi(); // documento OpenAPI generado por .NET: /openapi/v1.json
 
@@ -63,19 +65,18 @@ if (app.Environment.IsDevelopment())
         options.SwaggerEndpoint("/openapi/v1.json", "Gestión de Notas API v1");
         options.DocumentTitle = "Gestión de Notas API";
     });
+}
 
-    if (app.Configuration.GetValue<bool>("Database:ApplyMigrationsOnStartup"))
-    {
-        await using var scope = app.Services.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        await db.Database.MigrateAsync();
-    }
-}
-else
+// Migraciones automáticas SOLO en desarrollo. En producción las aplica el pipeline (ADR 0007).
+if (app.Environment.IsDevelopment() && app.Configuration.GetValue<bool>("Database:ApplyMigrationsOnStartup"))
 {
-    // En desarrollo el frontend usa http://localhost:5080; redirigir rompería el preflight de CORS.
-    app.UseHttpsRedirection();
+    await using var scope = app.Services.CreateAsyncScope();
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await db.Database.MigrateAsync();
 }
+
+// Sin UseHttpsRedirection: en local el frontend usa http://localhost:5080 (redirigir rompería el
+// preflight de CORS) y en Azure Container Apps el HTTPS lo termina el ingress, que ya redirige http → https.
 
 app.UseCors(FrontendCorsPolicy);
 

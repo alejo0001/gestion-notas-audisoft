@@ -6,6 +6,12 @@ Aplicación web para administrar **estudiantes**, **profesores** y las **notas**
 - **Frontend** en Angular 22 + Angular Material.
 - Paginación, búsqueda y ordenamiento en el servidor, alertas de cada acción, validaciones, manejo global de errores, panel de indicadores, documentación interactiva del API con Swagger y pruebas unitarias.
 
+## Demo en línea
+
+_Pendiente de publicación (Azure Static Web Apps + Container Apps + Azure SQL). Cada push a `main` se despliega automáticamente con GitHub Actions; ver [docs/despliegue-azure.md](docs/despliegue-azure.md)._
+
+> Para ejecutar el proyecto en local **no se necesita Docker ni Azure**: siga la sección *Instalación y ejecución*.
+
 ## Contenido del repositorio
 
 | Carpeta | Descripción |
@@ -15,6 +21,7 @@ Aplicación web para administrar **estudiantes**, **profesores** y las **notas**
 | `database/` | Scripts SQL: creación de la base con restricciones y datos de prueba |
 | `docs/decisions/` | Decisiones de arquitectura (ADRs) |
 | `docs/specs/` | Especificaciones funcionales |
+| `.github/workflows/` | CI/CD: pruebas y despliegue automático a Azure |
 
 ## Requisitos previos
 

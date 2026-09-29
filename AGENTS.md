@@ -10,6 +10,7 @@ Punto de entrada para cualquier agente de IA (o persona) que trabaje en este rep
 - Base de datos: SQL Server (migraciones EF Core o scripts en `database/`).
 - Frontend: Angular 22 standalone, Signals (zoneless), Angular Material 3, SweetAlert2.
 - Pruebas: xUnit + EF Core InMemory.
+- Despliegue: GitHub Actions → Azure Static Web Apps + Container Apps + Azure SQL (ADR 0007, `docs/despliegue-azure.md`). Docker solo se usa en el pipeline; en local no hace falta.
 
 ## Cómo ejecutarlo
 

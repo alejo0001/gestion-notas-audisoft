@@ -1,0 +1,166 @@
+# ------------------------------------------------------------------
+# CI/CD — Gestión de Notas (ADR 0007, guía en docs/despliegue-azure.md)
+#
+# Pull request a main  → solo pruebas (CI).
+# Push a main / manual → pruebas y, si pasan, despliegue:
+#   1. Imagen Docker del API → GitHub Container Registry (ghcr.io)
+#   2. Migraciones EF Core → Azure SQL (migration bundle)
+#   3. Nueva imagen → Azure Container Apps
+#   4. Angular → Azure Static Web Apps
+# ------------------------------------------------------------------
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-cd-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  NODE_VERSION: '24'
+  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/gestion-notas-api
+
+jobs:
+  # ---------------------------------------------------------------
+  test:
+    name: Pruebas
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Pruebas unitarias
+        run: dotnet test GestionNotas.slnx --configuration Release
+
+  # ---------------------------------------------------------------
+  deploy-api:
+    name: Desplegar API
+    needs: test
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    environment: produccion
+    permissions:
+      contents: read
+      packages: write   # publicar la imagen en ghcr.io
+      id-token: write   # login en Azure con OIDC (sin contraseñas guardadas)
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      # ---------- 1. Imagen Docker ----------
+      - name: Login en GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Construir y publicar imagen
+        uses: docker/build-push-action@v6
+        with:
+          context: backend
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.IMAGE_NAME }}:latest
+
+      # ---------- 2. Migraciones ----------
+      - name: Login en Azure (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Crear migration bundle
+        working-directory: backend
+        run: |
+          dotnet tool restore
+          dotnet ef migrations bundle \
+            --project src/GestionNotas.Infrastructure \
+            --startup-project src/GestionNotas.Api \
+            --configuration Release \
+            --self-contained -r linux-x64 \
+            --output efbundle --force
+
+      # Azure SQL solo acepta IPs autorizadas: se abre la IP del runner solo mientras migra.
+      - name: Abrir firewall de Azure SQL para este runner
+        run: |
+          RUNNER_IP=$(curl -s https://api.ipify.org)
+          az sql server firewall-rule create \
+            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --server "${{ vars.SQL_SERVER_NAME }}" \
+            --name "github-runner-${{ github.run_id }}" \
+            --start-ip-address "$RUNNER_IP" --end-ip-address "$RUNNER_IP"
+
+      - name: Aplicar migraciones pendientes
+        working-directory: backend
+        run: ./efbundle --connection "${{ secrets.SQL_CONNECTION_STRING }}"
+
+      - name: Cerrar firewall
+        if: always()
+        run: |
+          az sql server firewall-rule delete \
+            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --server "${{ vars.SQL_SERVER_NAME }}" \
+            --name "github-runner-${{ github.run_id }}" || true
+
+      # ---------- 3. Desplegar contenedor ----------
+      - name: Actualizar Azure Container App
+        run: |
+          az containerapp update \
+            --name "${{ vars.CONTAINER_APP_NAME }}" \
+            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --image "${{ env.IMAGE_NAME }}:${{ github.sha }}"
+
+  # ---------------------------------------------------------------
+  deploy-web:
+    name: Desplegar frontend
+    needs: test
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    environment: produccion
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Configurar URL del API
+        run: sed -i "s|__API_URL__|${{ vars.API_URL }}|" src/environments/environment.ts
+
+      - name: Compilar Angular (producción)
+        run: npx ng build --configuration production
+
+      - name: Publicar en Azure Static Web Apps
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.SWA_DEPLOYMENT_TOKEN }}
+          action: upload
+          app_location: frontend/dist/gestion-notas-web/browser
+          skip_app_build: true
+          skip_api_build: true

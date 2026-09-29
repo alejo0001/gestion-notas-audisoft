@@ -2,6 +2,14 @@
 
 Registro técnico de hitos. Formato: fecha — resumen, con referencia a ADRs y specs.
 
+## 2026-09-29 — Preparación del despliegue en Azure
+
+- ADR 0007 y guía `docs/despliegue-azure.md`: Static Web Apps (Free) + Container Apps (escala a cero) + Azure SQL (oferta gratuita).
+- `backend/Dockerfile` multi-etapa (SDK → runtime ASP.NET, usuario sin privilegios) y `.dockerignore`.
+- Workflow `.github/workflows/ci-cd.yml`: pruebas en PR; en `main` imagen a ghcr.io, migraciones con `ef migrations bundle` (firewall temporal), actualización del Container App y publicación del frontend. Login a Azure con OIDC.
+- `Program.cs`: Swagger habilitable en producción (`Swagger:Enabled`); migraciones al iniciar solo en Development; se quita `UseHttpsRedirection` (en Azure el ingress termina TLS).
+- Frontend: `environment.ts` con marcador `__API_URL__` (lo reemplaza el pipeline) y `staticwebapp.config.json` para las rutas de Angular.
+
 ## 2026-09-29 — Angular 22
 
 - Frontend actualizado de Angular 20 a 22 (20 → 21 → 22 con `ng update`), Angular Material/CDK 22 y TypeScript 6. Migraciones opcionales omitidas: el proyecto ya usaba el builder `@angular/build` y no tiene pruebas Karma ni usa `Router.getCurrentNavigation`.
