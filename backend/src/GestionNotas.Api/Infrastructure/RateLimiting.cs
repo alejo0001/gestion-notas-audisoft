@@ -3,6 +3,7 @@ using System.Net;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Options;
 
 namespace GestionNotas.Api.Infrastructure;
 
@@ -31,13 +32,10 @@ internal static class RateLimitingExtensions
 {
     public static IServiceCollection AddLimiteDePeticiones(this IServiceCollection services, IConfiguration configuration)
     {
-        var opciones = configuration.GetSection(RateLimitingOptions.Section).Get<RateLimitingOptions>() ?? new();
-        if (!opciones.Enabled)
-        {
-            return services;
-        }
-
-        var ventana = TimeSpan.FromSeconds(opciones.VentanaSegundos);
+        // Patrón Options: la sección se enlaza a una clase tipada y se lee en cada petición con IOptionsMonitor.
+        // Así la configuración final (appsettings + entorno + variables + la que inyectan las pruebas de
+        // integración) decide, sin importar en qué momento del arranque se agregó.
+        services.Configure<RateLimitingOptions>(configuration.GetSection(RateLimitingOptions.Section));
 
         services.AddRateLimiter(limiter =>
         {
@@ -47,8 +45,13 @@ internal static class RateLimitingExtensions
             // un cliente que abusa agota SU cupo sin afectar a los demás.
             limiter.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
             {
-                // Sin límite: preflight de CORS (lo hace el navegador, no el usuario) y el health check.
-                if (HttpMethods.IsOptions(context.Request.Method) || context.Request.Path.StartsWithSegments("/health"))
+                var opciones = context.RequestServices.GetRequiredService<IOptionsMonitor<RateLimitingOptions>>().CurrentValue;
+
+                // Sin límite: si está deshabilitado (Development), preflight de CORS (lo hace el navegador,
+                // no el usuario) y el health check.
+                if (!opciones.Enabled
+                    || HttpMethods.IsOptions(context.Request.Method)
+                    || context.Request.Path.StartsWithSegments("/health"))
                 {
                     return RateLimitPartition.GetNoLimiter("sin-limite");
                 }
@@ -60,7 +63,7 @@ internal static class RateLimitingExtensions
                 return RateLimitPartition.GetFixedWindowLimiter(clave, _ => new FixedWindowRateLimiterOptions
                 {
                     PermitLimit = esEscritura ? opciones.EscriturasPorVentana : opciones.LecturasPorVentana,
-                    Window = ventana,
+                    Window = TimeSpan.FromSeconds(opciones.VentanaSegundos),
                     QueueLimit = 0, // sin cola: se rechaza de inmediato en lugar de hacer esperar la petición
                 });
             });
@@ -69,6 +72,7 @@ internal static class RateLimitingExtensions
             limiter.OnRejected = async (context, cancellationToken) =>
             {
                 var http = context.HttpContext;
+                var opciones = http.RequestServices.GetRequiredService<IOptionsMonitor<RateLimitingOptions>>().CurrentValue;
                 var segundos = context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter)
                     ? (int)Math.Ceiling(retryAfter.TotalSeconds)
                     : opciones.VentanaSegundos;
@@ -95,14 +99,10 @@ internal static class RateLimitingExtensions
         return services;
     }
 
-    /// <summary>Activa el middleware solo si el servicio se registró (es decir, si está habilitado).</summary>
+    /// <summary>El middleware siempre está en el pipeline; si el límite está deshabilitado, no restringe nada.</summary>
     public static WebApplication UseLimiteDePeticiones(this WebApplication app)
     {
-        if (app.Configuration.GetValue<bool>($"{RateLimitingOptions.Section}:Enabled"))
-        {
-            app.UseRateLimiter();
-        }
-
+        app.UseRateLimiter();
         return app;
     }
 
