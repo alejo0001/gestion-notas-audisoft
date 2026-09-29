@@ -8,7 +8,7 @@ Punto de entrada para cualquier agente de IA (o persona) que trabaje en este rep
 
 - Backend: .NET 10, ASP.NET Core Web API (controladores), EF Core 10, FluentValidation, OpenAPI + Swagger UI.
 - Base de datos: SQL Server (migraciones EF Core o scripts en `database/`).
-- Frontend: Angular 20 standalone, Signals (zoneless), Angular Material 3, SweetAlert2.
+- Frontend: Angular 22 standalone, Signals (zoneless), Angular Material 3, SweetAlert2.
 - Pruebas: xUnit + EF Core InMemory.
 
 ## Cómo ejecutarlo

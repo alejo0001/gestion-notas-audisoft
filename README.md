@@ -3,7 +3,7 @@
 Aplicación web para administrar **estudiantes**, **profesores** y las **notas** que los profesores asignan a los estudiantes.
 
 - **API REST** en .NET 10 (ASP.NET Core + EF Core 10 + SQL Server).
-- **Frontend** en Angular 20 + Angular Material.
+- **Frontend** en Angular 22 + Angular Material.
 - Paginación, búsqueda y ordenamiento en el servidor, alertas de cada acción, validaciones, manejo global de errores, panel de indicadores, documentación interactiva del API con Swagger y pruebas unitarias.
 
 ## Contenido del repositorio
@@ -23,7 +23,6 @@ Aplicación web para administrar **estudiantes**, **profesores** y las **notas**
 - SQL Server: cualquiera de estas opciones
   - **LocalDB** (se instala con Visual Studio) — configuración por defecto
   - SQL Server Express / Developer
-  - Docker (`docker compose up -d` levanta SQL Server 2022)
 
 ## Instalación y ejecución
 
@@ -64,7 +63,7 @@ Server=(localdb)\MSSQLLocalDB;Database=GestionNotas;Trusted_Connection=True;Trus
 Otras opciones:
 
 - SQL Server Express: `Server=.\SQLEXPRESS;Database=GestionNotas;Trusted_Connection=True;TrustServerCertificate=True`
-- Docker: `Server=localhost,1433;Database=GestionNotas;User Id=sa;Password=GestionNotas#2026;TrustServerCertificate=True`
+- Servidor con usuario SQL: `Server=MI_SERVIDOR;Database=GestionNotas;User Id=MI_USUARIO;Password=MI_CLAVE;TrustServerCertificate=True`
 
 ### 2. API
 

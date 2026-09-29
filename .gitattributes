@@ -1,0 +1,8 @@
+# Normaliza finales de línea: en el repositorio siempre LF; en Windows Git convierte al hacer checkout.
+* text=auto
+
+# Binarios
+*.png binary
+*.jpg binary
+*.ico binary
+*.pdf binary

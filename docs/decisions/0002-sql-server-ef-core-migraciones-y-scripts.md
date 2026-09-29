@@ -8,7 +8,7 @@ El enunciado permite cualquier base de datos y crearla con migraciones de EF o c
 
 ## Decisión
 
-- Motor: **SQL Server** (LocalDB, Express, Developer o contenedor Docker — el `docker-compose.yml` levanta uno).
+- Motor: **SQL Server** (LocalDB por defecto; también Express o Developer). En la nube, Azure SQL Database (misma sintaxis y mismas migraciones).
 - Acceso a datos: **EF Core 10** con Fluent API (`IEntityTypeConfiguration<T>`), nombres de tablas y columnas exactamente como el enunciado (`Estudiante`, `Nota`, `Profesor`, `IdProfesor`, `IdEstudiante`...).
 - Dos caminos equivalentes para crear la base:
   - **A (recomendado):** migraciones EF Core (`dotnet ef database update`), con datos semilla vía `HasData`.

@@ -2,6 +2,13 @@
 
 Registro técnico de hitos. Formato: fecha — resumen, con referencia a ADRs y specs.
 
+## 2026-09-29 — Angular 22
+
+- Frontend actualizado de Angular 20 a 22 (20 → 21 → 22 con `ng update`), Angular Material/CDK 22 y TypeScript 6. Migraciones opcionales omitidas: el proyecto ya usaba el builder `@angular/build` y no tiene pruebas Karma ni usa `Router.getCurrentNavigation`.
+- Corregido: las alertas de SweetAlert2 quedaban detrás de los diálogos de Material (CDK 21+ usa la top layer del navegador). Solución: `topLayer: true` en `NotificationService` (ADR 0006).
+- `.gitattributes` para normalizar finales de línea (los archivos generados por Visual Studio usan CRLF).
+- Eliminado `docker-compose.yml` (SQL Server en contenedor): nunca se usó; en local se usa LocalDB y en la nube Azure SQL. El enunciado de la prueba se retiró del repositorio.
+
 ## 2026-09-29 — Seguridad de dependencias
 
 - `Microsoft.OpenApi` fijado en 2.7.5 (la 2.0.0, transitiva de `Microsoft.AspNetCore.OpenApi` 10.0.0, tenía la vulnerabilidad GHSA-v5pm-xwqc-g5wc, advertencia NU1903).
