@@ -161,11 +161,30 @@ Profesor (Id, Nombre) 1 ──< Nota (Id, Nombre, IdProfesor, IdEstudiante, Valo
 - Límite de peticiones por IP en la demo pública (429 al superarlo); desactivado en desarrollo local.
 - Protección de integridad: no se puede eliminar un estudiante o profesor con notas (respuesta 409 con mensaje claro).
 - Manejo global de errores con ProblemDetails (RFC 9457) y `traceId` para rastreo en logs.
+- Modo oscuro: sigue la preferencia del sistema y recuerda la elección del usuario.
+- Pruebas de integración del API completo (`WebApplicationFactory`) además de las unitarias; ambas corren en el pipeline de CI.
 - Diseño responsivo (menú lateral colapsable en móviles).
 
 ## Capturas
 
-_Pendiente: se agregarán en el documento de instalación una vez verificada la aplicación._
+El paso a paso con capturas de cada etapa está en [docs/Documento de instalación - Gestión de Notas.pdf](docs/Documento%20de%20instalaci%C3%B3n%20-%20Gesti%C3%B3n%20de%20Notas.pdf).
+
+## Mejoras futuras
+
+Fuera del alcance de la prueba; así se abordarían:
+
+**Autenticación y autorización por roles** (administrador, profesor, estudiante)
+
+- **Backend:** ASP.NET Core Identity para usuarios y contraseñas (hash con PBKDF2) y emisión de tokens JWT de corta duración con *refresh token*. `AddAuthentication().AddJwtBearer()` y políticas por rol (`[Authorize(Policy = "Profesor")]`) en los controladores.
+- **Reglas por rol:** el administrador gestiona todo; el profesor crea y edita solo las notas que asigna; el estudiante solo consulta las suyas. Estas reglas irían en los servicios de Application (filtrando por el usuario actual a través de una abstracción `ICurrentUser`), no solo en los controladores, para que ninguna ruta quede sin protección.
+- **Frontend:** pantalla de inicio de sesión, un interceptor HTTP que adjunte el token, *guards* de rutas y un menú que muestre solo las opciones permitidas para el rol.
+- **Demo pública:** usuarios de prueba por rol documentados en el README, para que la evaluación no requiera registrarse.
+
+**Otras**
+
+- Auditoría de cambios (quién y cuándo creó o modificó cada nota) con un *interceptor* de EF Core.
+- Caché de salida (`OutputCache`) para el panel de indicadores, invalidada al crear, editar o eliminar notas.
+- Pruebas end-to-end del frontend (Playwright) en el pipeline.
 
 ## Documentación técnica
 
