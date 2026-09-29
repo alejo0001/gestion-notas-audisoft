@@ -35,9 +35,9 @@ jobs:
       run:
         working-directory: backend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
@@ -56,9 +56,9 @@ jobs:
       packages: write   # publicar la imagen en ghcr.io
       id-token: write   # login en Azure con OIDC (sin contraseñas guardadas)
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
@@ -91,11 +91,12 @@ jobs:
         working-directory: backend
         run: |
           dotnet tool restore
+          # EF necesita los paquetes restaurados (obj/project.assets.json) antes de leer el proyecto.
+          dotnet restore src/GestionNotas.Api/GestionNotas.Api.csproj
           dotnet ef migrations bundle \
             --project src/GestionNotas.Infrastructure \
             --startup-project src/GestionNotas.Api \
             --configuration Release \
-            --self-contained -r linux-x64 \
             --output efbundle --force
 
       # Azure SQL solo acepta IPs autorizadas: se abre la IP del runner solo mientras migra.
@@ -139,9 +140,9 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
