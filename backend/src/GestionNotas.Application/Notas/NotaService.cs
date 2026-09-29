@@ -26,7 +26,19 @@ public sealed class NotaService(
         n.Profesor.Nombre,
         n.Valor);
 
-    public async Task<PagedResult<NotaDto>> GetPagedAsync(NotaQuery query, CancellationToken cancellationToken)
+    public Task<PagedResult<NotaDto>> GetPagedAsync(NotaQuery query, CancellationToken cancellationToken) =>
+        Consultar(query).ToPagedResultAsync(query, cancellationToken);
+
+    /// <summary>Todos los registros que cumplen los filtros (sin paginar), para exportar a Excel.</summary>
+    public async Task<IReadOnlyList<NotaDto>> ListarAsync(NotaQuery query, CancellationToken cancellationToken) =>
+        await Consultar(query).Take(PagedQuery.MaxFilasExportacion).ToListAsync(cancellationToken);
+
+    /// <summary>
+    /// Filtros, búsqueda y orden compartidos por el listado paginado y la exportación: así el Excel contiene
+    /// exactamente lo que el usuario ve en la tabla. Devuelve un IQueryable: nada se ejecuta hasta que el
+    /// llamador pagina (Skip/Take) o materializa (ToListAsync), y todo se traduce a un único SQL.
+    /// </summary>
+    private IQueryable<NotaDto> Consultar(NotaQuery query)
     {
         var notas = db.Notas.AsNoTracking();
 
@@ -62,7 +74,7 @@ public sealed class NotaService(
             _ => notas.OrderBy(n => n.Id)
         };
 
-        return await notas.Select(ToDto).ToPagedResultAsync(query, cancellationToken);
+        return notas.Select(ToDto);
     }
 
     public async Task<Result<NotaDto>> GetByIdAsync(int id, CancellationToken cancellationToken)

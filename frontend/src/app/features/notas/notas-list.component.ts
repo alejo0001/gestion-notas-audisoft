@@ -1,3 +1,4 @@
+import { HttpResponse } from '@angular/common/http';
 import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -82,6 +83,12 @@ export class NotasListComponent extends PagedListBase<Nota> {
 
   protected override fetch(query: PagedQuery): Observable<PagedResult<Nota>> {
     return this.service.getPaged(query as NotaQuery);
+  }
+
+  protected override readonly archivoExportacion = 'notas.xlsx';
+
+  protected override descargar(filtros: Omit<PagedQuery, 'page' | 'pageSize'>): Observable<HttpResponse<Blob>> {
+    return this.service.exportar(filtros as Omit<NotaQuery, 'page' | 'pageSize'>);
   }
 
   protected override buildQuery(): NotaQuery {

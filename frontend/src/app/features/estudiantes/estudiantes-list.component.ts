@@ -1,3 +1,4 @@
+import { HttpResponse } from '@angular/common/http';
 import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
@@ -46,6 +47,12 @@ export class EstudiantesListComponent extends PagedListBase<Estudiante> {
 
   protected override fetch(query: PagedQuery): Observable<PagedResult<Estudiante>> {
     return this.service.getPaged(query);
+  }
+
+  protected override readonly archivoExportacion = 'estudiantes.xlsx';
+
+  protected override descargar(filtros: Omit<PagedQuery, 'page' | 'pageSize'>): Observable<HttpResponse<Blob>> {
+    return this.service.exportar(filtros);
   }
 
   protected crear(): void {

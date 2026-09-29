@@ -1,3 +1,4 @@
+import { HttpResponse } from '@angular/common/http';
 import { DestroyRef, Directive, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PageEvent } from '@angular/material/paginator';
@@ -15,6 +16,7 @@ import {
 } from 'rxjs';
 import { PagedQuery, PagedResult } from '../core/models/api.models';
 import { NotificationService } from '../core/services/notification.service';
+import { descargarArchivo } from './descargar-archivo';
 
 /**
  * Lógica común de las pantallas con tabla paginada en el servidor (ADR 0003):
@@ -34,6 +36,7 @@ export abstract class PagedListBase<T> {
   readonly sort = signal<Sort>({ active: '', direction: '' });
   readonly search = signal('');
   readonly pageSizeOptions = [5, 10, 25, 50];
+  readonly exportando = signal(false);
 
   private readonly reload$ = new Subject<void>();
   private readonly searchInput$ = new Subject<string>();
@@ -80,6 +83,12 @@ export abstract class PagedListBase<T> {
 
   protected abstract fetch(query: PagedQuery): Observable<PagedResult<T>>;
 
+  /** Petición de exportación a Excel del recurso, con los filtros actuales. */
+  protected abstract descargar(filtros: Omit<PagedQuery, 'page' | 'pageSize'>): Observable<HttpResponse<Blob>>;
+
+  /** Nombre del archivo si el API no lo envía, p. ej. «notas.xlsx». */
+  protected abstract readonly archivoExportacion: string;
+
   /** Las subclases pueden sobrescribirlo para agregar filtros propios. */
   protected buildQuery(): PagedQuery {
     const sort = this.sort();
@@ -94,6 +103,28 @@ export abstract class PagedListBase<T> {
 
   load(): void {
     this.reload$.next();
+  }
+
+  /** Exporta a Excel lo que muestra la tabla: mismos filtros, búsqueda y orden, pero todas las páginas. */
+  exportar(): void {
+    // Desestructuración con rest: se descartan page y pageSize y se conserva el resto de filtros.
+    const { page: _page, pageSize: _pageSize, ...filtros } = this.buildQuery();
+
+    this.exportando.set(true);
+    this.descargar(filtros)
+      .pipe(
+        finalize(() => this.exportando.set(false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: (response) => {
+          descargarArchivo(response, this.archivoExportacion);
+          this.notifications.success('Archivo de Excel descargado correctamente.');
+        },
+        error: () => {
+          // El interceptor ya mostró la alerta.
+        },
+      });
   }
 
   onSearchInput(term: string): void {

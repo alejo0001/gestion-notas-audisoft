@@ -41,8 +41,12 @@ builder.Services.AddCors(options =>
 
         policy.AllowAnyHeader()
             .AllowAnyMethod()
-            .WithExposedHeaders("Location");
+            // Location: URL del recurso creado. Content-Disposition: nombre del archivo al exportar a Excel.
+            .WithExposedHeaders("Location", "Content-Disposition");
     }));
+
+// Límite de peticiones por IP: activo en producción, apagado en Development (sección RateLimiting).
+builder.Services.AddLimiteDePeticiones(builder.Configuration);
 
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<AppDbContext>("base-de-datos");
@@ -82,6 +86,9 @@ if (app.Environment.IsDevelopment() && app.Configuration.GetValue<bool>("Databas
 // preflight de CORS) y en Azure Container Apps el HTTPS lo termina el ingress, que ya redirige http → https.
 
 app.UseCors(FrontendCorsPolicy);
+
+// Después de CORS: así la respuesta 429 también lleva las cabeceras CORS y el frontend puede leer el mensaje.
+app.UseLimiteDePeticiones();
 
 app.MapControllers();
 app.MapHealthChecks("/health");

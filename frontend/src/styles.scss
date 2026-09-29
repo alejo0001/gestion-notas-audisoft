@@ -1,15 +1,27 @@
 @use '@angular/material' as mat;
 
+// Tema claro y oscuro (ThemeService). Con theme-type: color-scheme, Angular Material genera cada
+// token como light-dark(claro, oscuro) y el navegador elige según `color-scheme`: "light dark" sigue
+// al sistema operativo, y ThemeService lo fija en "light" o "dark" cuando el usuario elige.
 html {
-  color-scheme: light;
+  color-scheme: light dark;
   @include mat.theme((
     color: (
       primary: mat.$azure-palette,
       tertiary: mat.$blue-palette,
+      theme-type: color-scheme,
     ),
     typography: Roboto,
     density: 0,
   ));
+
+  // Colores semánticos propios (aprobada / reprobada) que no vienen en la paleta de Material.
+  --app-exito: light-dark(#2e7d32, #81c995);
+  --app-error: light-dark(#c62828, #f28b82);
+  --app-aprobada-fondo: light-dark(#d7f5dd, #1f3d25);
+  --app-aprobada-texto: light-dark(#0d5c1f, #b7f0c1);
+  --app-reprobada-fondo: light-dark(#fde0e0, #4a1f1d);
+  --app-reprobada-texto: light-dark(#8c1d18, #ffdad6);
 }
 
 html,
@@ -29,6 +41,12 @@ body {
   padding: 24px;
   max-width: 1200px;
   margin: 0 auto;
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .page-header {
@@ -113,13 +131,13 @@ body {
   color: var(--mat-sys-on-secondary-container);
 
   &.aprobada {
-    background: #d7f5dd;
-    color: #0d5c1f;
+    background: var(--app-aprobada-fondo);
+    color: var(--app-aprobada-texto);
   }
 
   &.reprobada {
-    background: #fde0e0;
-    color: #8c1d18;
+    background: var(--app-reprobada-fondo);
+    color: var(--app-reprobada-texto);
   }
 }
 

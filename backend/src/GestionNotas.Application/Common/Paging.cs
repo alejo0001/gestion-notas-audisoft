@@ -7,6 +7,9 @@ public record PagedQuery
 {
     public const int MaxPageSize = 100;
 
+    /// <summary>Tope de filas al exportar: evita generar archivos enormes por error o por abuso.</summary>
+    public const int MaxFilasExportacion = 10_000;
+
     public int Page { get; init; } = 1;
 
     public int PageSize { get; init; } = 10;

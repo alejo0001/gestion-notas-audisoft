@@ -10,6 +10,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { map } from 'rxjs';
 import { environment } from '../environments/environment';
+import { ThemeService } from './core/services/theme.service';
 
 interface MenuItem {
   label: string;
@@ -43,6 +44,8 @@ export class App {
   ];
 
   protected readonly year = new Date().getFullYear();
+
+  protected readonly theme = inject(ThemeService);
 
   /** Documentación interactiva del API (Swagger UI), derivada de la URL base configurada. */
   protected readonly apiDocsUrl = `${environment.apiUrl.replace(/\/api$/, '')}/swagger`;

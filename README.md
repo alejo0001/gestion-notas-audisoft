@@ -99,7 +99,7 @@ En `docs/postman/` están la colección y dos entornos:
 
 | Archivo | Contenido |
 |---|---|
-| `GestionNotas.postman_collection.json` | 45 peticiones con pruebas automáticas |
+| `GestionNotas.postman_collection.json` | 48 peticiones con pruebas automáticas |
 | `Local.postman_environment.json` | `baseUrl = http://localhost:5080` |
 | `Azure.postman_environment.json` | `baseUrl` = API desplegado en Azure |
 
@@ -119,20 +119,25 @@ npm start
 
 Abre http://localhost:4300 (puerto fijo para no chocar con otros proyectos Angular en el 4200). La URL del API se configura en `frontend/src/environments/environment.development.ts`.
 
-### 4. Pruebas unitarias
+### 4. Pruebas automatizadas
 
 ```bash
 cd backend
 dotnet test
 ```
 
+Ejecuta dos proyectos, sin necesidad de SQL Server:
+
+- `GestionNotas.UnitTests`: reglas de negocio de los servicios.
+- `GestionNotas.IntegrationTests`: el API completo levantado en memoria (`WebApplicationFactory`) y probado con peticiones HTTP reales: códigos de estado, ProblemDetails, CORS y límite de peticiones.
+
 ## Endpoints
 
 | Recurso | Endpoints |
 |---|---|
-| Estudiantes | `GET /api/estudiantes` · `GET /api/estudiantes/{id}` · `GET /api/estudiantes/lookup` · `POST` · `PUT /{id}` · `DELETE /{id}` |
-| Profesores | `GET /api/profesores` · `GET /api/profesores/{id}` · `GET /api/profesores/lookup` · `POST` · `PUT /{id}` · `DELETE /{id}` |
-| Notas | `GET /api/notas` (filtros `idEstudiante`, `idProfesor`) · `GET /{id}` · `POST` · `PUT /{id}` · `DELETE /{id}` |
+| Estudiantes | `GET /api/estudiantes` · `GET /api/estudiantes/{id}` · `GET /api/estudiantes/lookup` · `GET /api/estudiantes/exportar` · `POST` · `PUT /{id}` · `DELETE /{id}` |
+| Profesores | `GET /api/profesores` · `GET /api/profesores/{id}` · `GET /api/profesores/lookup` · `GET /api/profesores/exportar` · `POST` · `PUT /{id}` · `DELETE /{id}` |
+| Notas | `GET /api/notas` (filtros `idEstudiante`, `idProfesor`) · `GET /api/notas/exportar` · `GET /{id}` · `POST` · `PUT /{id}` · `DELETE /{id}` |
 | Reportes | `GET /api/reportes/resumen` |
 
 Parámetros de listado: `page`, `pageSize` (máx. 100), `search`, `sortBy`, `sortDirection` (`asc`/`desc`).
@@ -152,6 +157,8 @@ Profesor (Id, Nombre) 1 ──< Nota (Id, Nombre, IdProfesor, IdEstudiante, Valo
 - Búsqueda con *debounce*, ordenamiento por columnas y filtros por estudiante/profesor en Notas.
 - Enlace directo desde un estudiante o profesor a sus notas.
 - Validaciones en frontend y backend con mensajes en español.
+- Exportación a Excel de cada tabla con los filtros aplicados.
+- Límite de peticiones por IP en la demo pública (429 al superarlo); desactivado en desarrollo local.
 - Protección de integridad: no se puede eliminar un estudiante o profesor con notas (respuesta 409 con mensaje claro).
 - Manejo global de errores con ProblemDetails (RFC 9457) y `traceId` para rastreo en logs.
 - Diseño responsivo (menú lateral colapsable en móviles).

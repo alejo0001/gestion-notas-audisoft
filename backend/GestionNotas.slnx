@@ -6,6 +6,7 @@
     <Project Path="src/GestionNotas.Api/GestionNotas.Api.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/GestionNotas.IntegrationTests/GestionNotas.IntegrationTests.csproj" />
     <Project Path="tests/GestionNotas.UnitTests/GestionNotas.UnitTests.csproj" />
   </Folder>
 </Solution>

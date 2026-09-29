@@ -25,6 +25,8 @@ public interface IEstudianteService
 {
     Task<PagedResult<EstudianteDto>> GetPagedAsync(PagedQuery query, CancellationToken cancellationToken);
 
+    Task<IReadOnlyList<EstudianteDto>> ListarAsync(PagedQuery query, CancellationToken cancellationToken);
+
     Task<Result<EstudianteDto>> GetByIdAsync(int id, CancellationToken cancellationToken);
 
     Task<IReadOnlyList<LookupDto>> GetLookupAsync(CancellationToken cancellationToken);
