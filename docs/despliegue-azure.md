@@ -52,8 +52,13 @@ az group create --name $RG --location $LOC
 ## 3. Base de datos (oferta gratuita)
 
 ```bash
-az sql server create -g $RG -n $SQL_SERVER -l $LOC \
-  --admin-user $SQL_ADMIN --admin-password "$SQL_PASS"
+# Algunas regiones rechazan servidores SQL nuevos (RegionDoesNotAllowProvisioning).
+# Se prueba en orden y se usa la primera que acepte; el resto de recursos puede quedar en otra región.
+for SQL_LOC in $LOC centralus westus3 eastus canadacentral westus2; do
+  echo "Intentando $SQL_LOC..."
+  az sql server create -g $RG -n $SQL_SERVER -l $SQL_LOC \
+    --admin-user $SQL_ADMIN --admin-password "$SQL_PASS" -o none && break
+done
 
 # Permite conexiones desde servicios de Azure (el Container App).
 az sql server firewall-rule create -g $RG -s $SQL_SERVER -n AllowAzureServices \
@@ -148,6 +153,13 @@ En GitHub: **Settings → Secrets and variables → Actions**
 2. La primera vez, el job *Desplegar API* falla en el último paso: la imagen en `ghcr.io` se crea **privada** y Azure no puede descargarla. Hágala pública una sola vez: GitHub → su perfil → **Packages** → `gestion-notas-api` → *Package settings* → *Change visibility* → **Public**.
 3. Vuelva a Actions y pulse **Re-run failed jobs**.
 4. Abra la URL del frontend. La primera carga puede tardar hasta un minuto (API y base de datos despiertan).
+
+## Problemas conocidos
+
+- **`RegionDoesNotAllowProvisioning` al crear el servidor SQL:** la región no acepta servidores nuevos para esa suscripción. El bucle del paso 3 prueba otras regiones. En este proyecto la base quedó en *Central US* y el resto en *East US 2*.
+- **Tras un intento fallido, "The resource ... already exists in location ...":** el intento fallido deja el nombre reservado temporalmente. Use otro nombre de servidor (por ejemplo, agregue una letra al final).
+- **`AADSTS700213: No matching federated identity record`:** GitHub puede presentar el *subject* con los IDs numéricos del usuario y del repositorio (`repo:alejo0001@41093060/gestion-notas-audisoft@1395770841:environment:produccion`). Copie el subject exacto del error y cree otra credencial federada con ese valor (mismo comando del paso 6, otro `name`).
+- **`PrincipalNotFound` al asignar el rol en el paso 6:** la identidad recién creada aún no se ha propagado; espere un minuto y repita el comando.
 
 ## Costos y control
 

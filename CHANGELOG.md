@@ -4,6 +4,9 @@ Registro técnico de hitos. Formato: fecha — resumen, con referencia a ADRs y 
 
 ## 2026-09-29 — Preparación del despliegue en Azure
 
+- `AppDbContextDesignTimeFactory` (`IDesignTimeDbContextFactory`): las herramientas de EF (migrations bundle en el pipeline) crean el DbContext sin arrancar el API ni leer `appsettings.json`.
+- Workflow: `dotnet restore` antes del bundle, paso de firewall tolerante a fallos (los runners corren en Azure y `AllowAzureServices` les da acceso), acciones actualizadas a v5.
+- Credencial federada adicional para el formato de *subject* de GitHub con IDs inmutables (`repo:owner@id/repo@id:environment:produccion`).
 - ADR 0007 y guía `docs/despliegue-azure.md`: Static Web Apps (Free) + Container Apps (escala a cero) + Azure SQL (oferta gratuita).
 - `backend/Dockerfile` multi-etapa (SDK → runtime ASP.NET, usuario sin privilegios) y `.dockerignore`.
 - Workflow `.github/workflows/ci-cd.yml`: pruebas en PR; en `main` imagen a ghcr.io, migraciones con `ef migrations bundle` (firewall temporal), actualización del Container App y publicación del frontend. Login a Azure con OIDC.
