@@ -15,7 +15,7 @@ Permitir crear, consultar, editar y eliminar estudiantes y profesores desde una 
 5. Eliminar un registro. Si el registro tiene notas asociadas, la eliminación se rechaza con un mensaje claro (ver ADR 0005).
 6. Cada listado muestra, además del nombre, la cantidad de notas asociadas; en estudiantes también el promedio.
 7. Exponer un endpoint `lookup` (id + nombre, sin paginar) para llenar los selectores del formulario de notas.
-8. El nombre es único por recurso: no se permiten dos estudiantes (ni dos profesores) con el mismo nombre. Se valida en el servicio (mensaje en el campo `nombre`) y con un índice único en la base de datos. La comparación no distingue mayúsculas/minúsculas (collation de SQL Server).
+8. El nombre es único por recurso: no se permiten dos estudiantes (ni dos profesores) con el mismo nombre. Se valida en el servicio (mensaje en el campo `nombre`) y con un índice único en la base de datos. Antes de comparar y guardar, el nombre se normaliza: sin espacios en los extremos y con un solo espacio entre palabras (`Texto.Normalizar`), así «Samuel  Torres» es duplicado de «Samuel Torres». La comparación no distingue mayúsculas/minúsculas (collation de SQL Server); sí distingue tildes («Sebastián» ≠ «Sebastian»).
 9. La interfaz muestra una alerta tras cada acción: "Estudiante creado correctamente", "Estudiante actualizado correctamente", "Estudiante eliminado correctamente" (ídem para profesores), y pide confirmación antes de eliminar.
 
 ## Contrato de API

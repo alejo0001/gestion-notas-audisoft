@@ -2,6 +2,21 @@
 
 Registro técnico de hitos. Formato: fecha — resumen, con referencia a ADRs y specs.
 
+## 2026-09-29 — Evaluación única por estudiante y profesor
+
+- Corregido: se podía registrar dos veces la misma evaluación («Parcial 1») al mismo estudiante con el mismo profesor. Ahora estudiante + profesor + evaluación es única: validación en `NotaService` al crear y al editar (400 en `nombre`) e índice único `IX_Nota_IdEstudiante_IdProfesor_Nombre` (migración `NotaUnica`, también en `01_crear_base_datos.sql`). La migración renombra antes las repetidas existentes («Parcial 1 (2)») en lugar de borrarlas.
+- Nombres normalizados (`Texto.Normalizar`): sin espacios en los extremos y un solo espacio entre palabras, en estudiantes, profesores y notas. «Samuel  Torres» ya no pasa como distinto de «Samuel Torres».
+- `GlobalExceptionHandler`: una violación de índice único (SQL 2601/2627) por peticiones simultáneas responde 409 «Registro duplicado».
+- `PUT /api/notas/{id}` comprueba primero que la nota exista (404) y después valida.
+- Pruebas unitarias nuevas para duplicados, edición y normalización; caso agregado a la colección de Postman.
+- Corregido (detectado con la colección de Postman): los errores 400/404/409 se enviaban como `application/json` en vez de `application/problem+json` (RFC 9457). Causa: `[Produces("application/json")]` en `ApiControllerBase` forzaba el tipo en todas las respuestas; se eliminó.
+- La raíz del API (`/`) redirige a Swagger en lugar de responder 404.
+
+## 2026-09-29 — Colección de Postman
+
+- `docs/postman/`: colección v2.1 con 45 peticiones y pruebas automáticas (códigos de estado, estructura paginada, orden, filtros, ProblemDetails) y entornos *Local* y *Azure*.
+- Flujo autocontenido para **Run collection**: crea estudiante, profesor y nota con nombres únicos por ejecución, prueba validaciones (400), inexistentes (404) e integridad (409) y elimina lo creado.
+
 ## 2026-09-29 — Preparación del despliegue en Azure
 
 - `AppDbContextDesignTimeFactory` (`IDesignTimeDbContextFactory`): las herramientas de EF (migrations bundle en el pipeline) crean el DbContext sin arrancar el API ni leer `appsettings.json`.

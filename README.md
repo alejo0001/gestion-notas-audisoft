@@ -8,7 +8,14 @@ Aplicación web para administrar **estudiantes**, **profesores** y las **notas**
 
 ## Demo en línea
 
-_Pendiente de publicación (Azure Static Web Apps + Container Apps + Azure SQL). Cada push a `main` se despliega automáticamente con GitHub Actions; ver [docs/despliegue-azure.md](docs/despliegue-azure.md)._
+| | URL |
+|---|---|
+| Aplicación | https://nice-river-0fe292b0f.4.azurestaticapps.net |
+| API (Swagger) | https://ca-gestion-notas-api.yellowriver-838dad11.eastus2.azurecontainerapps.io/swagger |
+
+Azure Static Web Apps + Container Apps + Azure SQL, en planes gratuitos. Cada push a `main` se prueba y despliega automáticamente con GitHub Actions ([docs/despliegue-azure.md](docs/despliegue-azure.md)).
+
+> La primera carga puede tardar hasta un minuto: el API y la base de datos se apagan solos cuando no hay tráfico.
 
 > Para ejecutar el proyecto en local **no se necesita Docker ni Azure**: siga la sección *Instalación y ejecución*.
 
@@ -21,6 +28,7 @@ _Pendiente de publicación (Azure Static Web Apps + Container Apps + Azure SQL).
 | `database/` | Scripts SQL: creación de la base con restricciones y datos de prueba |
 | `docs/decisions/` | Decisiones de arquitectura (ADRs) |
 | `docs/specs/` | Especificaciones funcionales |
+| `docs/postman/` | Colección y entornos de Postman |
 | `.github/workflows/` | CI/CD: pruebas y despliegue automático a Azure |
 
 ## Requisitos previos
@@ -83,7 +91,23 @@ dotnet run --project src/GestionNotas.Api --launch-profile http
 - Documentación interactiva (Swagger UI): http://localhost:5080/swagger
 - Especificación OpenAPI: http://localhost:5080/openapi/v1.json
 - Health check: http://localhost:5080/health
-- Colección de pruebas: `backend/src/GestionNotas.Api/GestionNotas.Api.http` (también importable en Postman desde el OpenAPI).
+- Peticiones de ejemplo para Visual Studio: `backend/src/GestionNotas.Api/GestionNotas.Api.http`.
+
+### Postman
+
+En `docs/postman/` están la colección y dos entornos:
+
+| Archivo | Contenido |
+|---|---|
+| `GestionNotas.postman_collection.json` | 45 peticiones con pruebas automáticas |
+| `Local.postman_environment.json` | `baseUrl = http://localhost:5080` |
+| `Azure.postman_environment.json` | `baseUrl` = API desplegado en Azure |
+
+1. Postman → **Import** → arrastre los tres archivos.
+2. Seleccione el entorno (arriba a la derecha): *Gestión de Notas — Local* o *— Azure*.
+3. Clic derecho en la colección → **Run collection** → **Run**.
+
+La colección crea un estudiante, un profesor y una nota; prueba listado paginado, búsqueda, orden, filtros, edición, validaciones (400), recursos inexistentes (404) y la protección de integridad (409); y al final borra lo que creó, así que se puede ejecutar las veces que se quiera sin ensuciar los datos.
 
 ### 3. Frontend
 

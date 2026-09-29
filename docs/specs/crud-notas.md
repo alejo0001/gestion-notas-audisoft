@@ -13,7 +13,8 @@ Registrar las notas que un profesor asigna a un estudiante, con validación de r
 3. Crear y editar una nota con: `nombre` (obligatorio, 2–100 caracteres), `idEstudiante` e `idProfesor` (deben existir), `valor` (0.0 a 5.0, máximo 2 decimales — escala colombiana).
 4. Eliminar una nota con confirmación previa.
 5. La UI indica visualmente si la nota es aprobatoria (≥ 3.0) o no.
-6. Alerta tras cada acción: "Nota creada / actualizada / eliminada correctamente".
+6. La combinación **estudiante + profesor + evaluación (`nombre`)** es única: un estudiante no puede tener dos veces «Parcial 1» con el mismo profesor (sí con otro profesor). Se valida al crear y al editar (400 en el campo `nombre`) y con el índice único `IX_Nota_IdEstudiante_IdProfesor_Nombre`. El nombre se normaliza igual que en estudiantes y profesores; no distingue mayúsculas/minúsculas.
+7. Alerta tras cada acción: "Nota creada / actualizada / eliminada correctamente".
 
 ## Contrato de API
 
@@ -42,12 +43,16 @@ Base: `/api/notas`
 - `Nota.IdEstudiante` → `FK_Nota_Estudiante` (ON DELETE NO ACTION).
 - `Nota.IdProfesor` → `FK_Nota_Profesor` (ON DELETE NO ACTION).
 - `CK_Nota_Valor`: `Valor BETWEEN 0 AND 5`, tipo `DECIMAL(3,2)`.
+- `IX_Nota_IdEstudiante_IdProfesor_Nombre`: índice único (migración `NotaUnica`). La migración renombra antes las evaluaciones repetidas que ya existieran («Parcial 1 (2)») para no perder datos.
+- Si dos peticiones simultáneas superan la validación, el índice rechaza la segunda y el API responde 409 «Registro duplicado».
 
 ## Criterios de aceptación
 
 - Crear una nota con `idEstudiante` inexistente devuelve 400 con el error en `idEstudiante`.
 - Crear una nota con `valor = 5.5` devuelve 400; con `valor = 5` devuelve 201.
 - Insertar directamente en SQL una nota con valor 6 falla por el `CHECK`.
+- Crear «Parcial 1» para el mismo estudiante y profesor por segunda vez devuelve 400 en `nombre`; con otro profesor devuelve 201.
+- Editar una nota para que coincida con otra existente devuelve 400; editar solo el valor de una nota devuelve 200.
 - Filtrar por estudiante devuelve solo sus notas y la paginación refleja el total filtrado.
 
 ## Fuera de alcance

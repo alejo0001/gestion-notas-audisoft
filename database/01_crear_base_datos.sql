@@ -74,6 +74,9 @@ BEGIN
     -- SQL Server no indexa las FK automáticamente: se crean para acelerar JOIN y filtros.
     CREATE INDEX IX_Nota_IdProfesor ON dbo.Nota (IdProfesor);
     CREATE INDEX IX_Nota_IdEstudiante ON dbo.Nota (IdEstudiante);
+
+    -- Llave natural: un estudiante no puede tener dos veces la misma evaluación con el mismo profesor.
+    CREATE UNIQUE INDEX IX_Nota_IdEstudiante_IdProfesor_Nombre ON dbo.Nota (IdEstudiante, IdProfesor, Nombre);
 END
 GO
 
@@ -106,6 +109,14 @@ IF NOT EXISTS (SELECT 1 FROM dbo.__EFMigrationsHistory WHERE MigrationId = N'202
 BEGIN
     INSERT INTO dbo.__EFMigrationsHistory (MigrationId, ProductVersion)
     VALUES (N'20260928234406_NombreUnico', N'10.0.0');
+END
+GO
+
+-- El índice único de evaluaciones (migración NotaUnica) ya está incluido arriba en la tabla Nota.
+IF NOT EXISTS (SELECT 1 FROM dbo.__EFMigrationsHistory WHERE MigrationId = N'20260929193000_NotaUnica')
+BEGIN
+    INSERT INTO dbo.__EFMigrationsHistory (MigrationId, ProductVersion)
+    VALUES (N'20260929193000_NotaUnica', N'10.0.0');
 END
 GO
 
