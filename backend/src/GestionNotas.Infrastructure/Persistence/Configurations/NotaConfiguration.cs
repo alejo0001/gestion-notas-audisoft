@@ -37,5 +37,11 @@ internal sealed class NotaConfiguration : IEntityTypeConfiguration<Nota>
 
         builder.HasIndex(n => n.IdEstudiante).HasDatabaseName("IX_Nota_IdEstudiante");
         builder.HasIndex(n => n.IdProfesor).HasDatabaseName("IX_Nota_IdProfesor");
+
+        // Llave natural: un estudiante no puede tener dos veces la misma evaluación con el mismo profesor.
+        // Respaldo en la base de la validación del servicio (cubre condiciones de carrera).
+        builder.HasIndex(n => new { n.IdEstudiante, n.IdProfesor, n.Nombre })
+            .IsUnique()
+            .HasDatabaseName("IX_Nota_IdEstudiante_IdProfesor_Nombre");
     }
 }

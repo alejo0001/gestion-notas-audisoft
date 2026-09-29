@@ -79,7 +79,7 @@ public sealed class EstudianteService(
             return duplicado;
         }
 
-        var estudiante = new Estudiante { Nombre = request.Nombre.Trim() };
+        var estudiante = new Estudiante { Nombre = Texto.Normalizar(request.Nombre) };
         db.Estudiantes.Add(estudiante);
         await db.SaveChangesAsync(cancellationToken);
 
@@ -107,7 +107,7 @@ public sealed class EstudianteService(
             return duplicado;
         }
 
-        estudiante.Nombre = request.Nombre.Trim();
+        estudiante.Nombre = Texto.Normalizar(request.Nombre);
         await db.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("Estudiante {EstudianteId} actualizado", id);
@@ -146,7 +146,7 @@ public sealed class EstudianteService(
     /// </summary>
     private async Task<Error?> NombreDuplicadoAsync(string nombre, int? idActual, CancellationToken cancellationToken)
     {
-        var normalizado = nombre.Trim();
+        var normalizado = Texto.Normalizar(nombre);
         var existe = await db.Estudiantes.AnyAsync(
             e => e.Nombre == normalizado && (idActual == null || e.Id != idActual),
             cancellationToken);

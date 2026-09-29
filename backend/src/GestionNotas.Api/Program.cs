@@ -65,6 +65,9 @@ if (app.Environment.IsDevelopment() || app.Configuration.GetValue<bool>("Swagger
         options.SwaggerEndpoint("/openapi/v1.json", "Gestión de Notas API v1");
         options.DocumentTitle = "Gestión de Notas API";
     });
+
+    // La raíz no tiene contenido propio: se redirige a la documentación en vez de responder 404.
+    app.MapGet("/", () => Results.Redirect("/swagger")).ExcludeFromDescription();
 }
 
 // Migraciones automáticas SOLO en desarrollo. En producción las aplica el pipeline (ADR 0007).

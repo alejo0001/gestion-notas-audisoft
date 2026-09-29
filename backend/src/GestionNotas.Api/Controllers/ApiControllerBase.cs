@@ -7,7 +7,9 @@ namespace GestionNotas.Api.Controllers;
 /// Base común: traduce los errores esperados del <see cref="Result"/> a respuestas HTTP con ProblemDetails (ADR 0004).
 /// </summary>
 [ApiController]
-[Produces("application/json")]
+// Sin [Produces("application/json")]: ese atributo forzaba el tipo en TODAS las respuestas, incluidos los errores,
+// y reemplazaba el "application/problem+json" que exige el RFC 9457. Sin él, los DTO salen como application/json
+// y los errores (400/404/409) como application/problem+json.
 public abstract class ApiControllerBase : ControllerBase
 {
     protected ActionResult ToProblem(Error error) => error.Type switch

@@ -56,6 +56,20 @@ public sealed class EstudianteServiceTests
     }
 
     [Fact]
+    public async Task CreateAsync_ConEspaciosInternosRepetidos_DetectaElDuplicado()
+    {
+        await using var db = TestDbContextFactory.CreateEmpty();
+        db.AddEstudiante("Samuel Torres");
+        var service = CreateService(db);
+
+        var result = await service.CreateAsync(new EstudianteSaveRequest("Samuel    Torres"), CancellationToken.None);
+
+        Assert.Equal(ErrorType.Validation, result.Error!.Type);
+        Assert.True(result.Error.ValidationErrors!.ContainsKey("nombre"));
+        Assert.Single(db.Estudiantes);
+    }
+
+    [Fact]
     public async Task UpdateAsync_ConservandoSuPropioNombre_EsValido()
     {
         await using var db = TestDbContextFactory.CreateEmpty();

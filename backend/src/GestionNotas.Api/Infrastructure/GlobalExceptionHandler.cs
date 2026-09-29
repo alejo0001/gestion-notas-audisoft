@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace GestionNotas.Api.Infrastructure;
@@ -28,6 +29,12 @@ internal sealed class GlobalExceptionHandler(
 
         var (status, title, detail) = exception switch
         {
+            // Condición de carrera: dos peticiones pasaron la validación a la vez y el índice único
+            // rechazó la segunda (2601 = índice único, 2627 = restricción UNIQUE/PK).
+            DbUpdateException { InnerException: SqlException { Number: 2601 or 2627 } } => (
+                StatusCodes.Status409Conflict,
+                "Registro duplicado",
+                "Ya existe un registro con esos mismos datos. Actualice la página e intente de nuevo."),
             // Condición de carrera: se validó antes, pero la BD rechazó por una FK (ADR 0005).
             DbUpdateException => (
                 StatusCodes.Status409Conflict,

@@ -78,7 +78,7 @@ public sealed class NotaService(
 
     public async Task<Result<NotaDto>> CreateAsync(NotaSaveRequest request, CancellationToken cancellationToken)
     {
-        var error = await ValidateAsync(request, cancellationToken);
+        var error = await ValidateAsync(request, idActual: null, cancellationToken);
         if (error is not null)
         {
             return error;
@@ -86,7 +86,7 @@ public sealed class NotaService(
 
         var nota = new Nota
         {
-            Nombre = request.Nombre.Trim(),
+            Nombre = Texto.Normalizar(request.Nombre),
             IdEstudiante = request.IdEstudiante,
             IdProfesor = request.IdProfesor,
             Valor = request.Valor
@@ -104,19 +104,19 @@ public sealed class NotaService(
 
     public async Task<Result<NotaDto>> UpdateAsync(int id, NotaSaveRequest request, CancellationToken cancellationToken)
     {
-        var error = await ValidateAsync(request, cancellationToken);
-        if (error is not null)
-        {
-            return error;
-        }
-
         var nota = await db.Notas.FirstOrDefaultAsync(n => n.Id == id, cancellationToken);
         if (nota is null)
         {
             return NotFound(id);
         }
 
-        nota.Nombre = request.Nombre.Trim();
+        var error = await ValidateAsync(request, idActual: id, cancellationToken);
+        if (error is not null)
+        {
+            return error;
+        }
+
+        nota.Nombre = Texto.Normalizar(request.Nombre);
         nota.IdEstudiante = request.IdEstudiante;
         nota.IdProfesor = request.IdProfesor;
         nota.Valor = request.Valor;
@@ -141,8 +141,12 @@ public sealed class NotaService(
         return Result.Success();
     }
 
-    /// <summary>Valida formato (FluentValidation) y que el estudiante y el profesor existan.</summary>
-    private async Task<Error?> ValidateAsync(NotaSaveRequest request, CancellationToken cancellationToken)
+    /// <summary>
+    /// Valida en orden: formato (FluentValidation), que el estudiante y el profesor existan y que la
+    /// evaluación no esté repetida. <paramref name="idActual"/> es la nota que se edita (null al crear),
+    /// para no compararla consigo misma.
+    /// </summary>
+    private async Task<Error?> ValidateAsync(NotaSaveRequest request, int? idActual, CancellationToken cancellationToken)
     {
         var validation = await validator.ValidateAsync(request, cancellationToken);
         if (!validation.IsValid)
@@ -162,7 +166,43 @@ public sealed class NotaService(
             errores["idProfesor"] = [$"No existe un profesor con id {request.IdProfesor}."];
         }
 
-        return errores.Count > 0 ? Error.Validation(errores) : null;
+        if (errores.Count > 0)
+        {
+            return Error.Validation(errores);
+        }
+
+        return await EvaluacionDuplicadaAsync(request, idActual, cancellationToken);
+    }
+
+    /// <summary>
+    /// Llave natural de la nota: un estudiante no puede tener dos veces la misma evaluación con el mismo profesor
+    /// (índice único IX_Nota_IdEstudiante_IdProfesor_Nombre). La misma evaluación con otro profesor sí se permite.
+    /// En SQL Server la comparación no distingue mayúsculas/minúsculas (collation *_CI_AS).
+    /// </summary>
+    private async Task<Error?> EvaluacionDuplicadaAsync(NotaSaveRequest request, int? idActual, CancellationToken cancellationToken)
+    {
+        var nombre = Texto.Normalizar(request.Nombre);
+
+        var duplicada = await db.Notas
+            .Where(n => n.IdEstudiante == request.IdEstudiante
+                        && n.IdProfesor == request.IdProfesor
+                        && n.Nombre == nombre
+                        && (idActual == null || n.Id != idActual))
+            .Select(n => new { Estudiante = n.Estudiante.Nombre, Profesor = n.Profesor.Nombre })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (duplicada is null)
+        {
+            return null;
+        }
+
+        logger.LogWarning(
+            "Evaluación duplicada rechazada: {Nombre} (estudiante {EstudianteId}, profesor {ProfesorId})",
+            nombre, request.IdEstudiante, request.IdProfesor);
+
+        return Error.Validation(
+            "nombre",
+            $"{duplicada.Estudiante} ya tiene la evaluación «{nombre}» registrada con el profesor {duplicada.Profesor}.");
     }
 
     private Error NotFound(int id)
